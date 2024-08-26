@@ -1,0 +1,36 @@
+/* Style for dropdown items */
+#spendingTitle option {
+    padding-left: 22px;
+    background-repeat: no-repeat;
+    background-position: left center;
+    background-size: 20px 20px;
+    font-size: 16px;
+}
+
+/* Red border for editing warning */
+.editing-warning {
+    border: 2px solid red;
+}
+
+/* Dropdown icon size */
+.dropdown-icon {
+    width: 22px;
+    height: 22px;
+}
+
+/* Modern design for the spending box */
+.spending-box {
+    background: linear-gradient(145deg, #f0f0f0, #cacaca);
+    box-shadow: 6px 6px 12px #d1d1d1, -6px -6px 12px #ffffff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.spending-box:hover {
+    transform: translateY(-5px);
+    box-shadow: 10px 10px 20px #d1d1d1, -10px -10px 20px #ffffff;
+}
+
+/* Larger icons in the spending box */
+.spending-box .icon {
+    font-size: 2.5rem;
+}
