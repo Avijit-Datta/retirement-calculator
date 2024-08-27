@@ -1,17 +1,19 @@
 let chart;
 
 function calculateAndShowResult() {
+  // Get all values from input fields
   const currentAge = parseFloat(document.getElementById("currentAge").value);
   const targetAge = parseFloat(document.getElementById("targetAge").value);
   const currentSavings = parseFloat(
-    document.getElementById("retirementSavings").value
+    document.getElementById("retirementSavings").value,
   );
   const contribution = parseFloat(
-    document.getElementById("contribution").value
+    document.getElementById("contribution").value,
   );
   const frequency = parseFloat(document.getElementById("frequency").value);
   const inflationRate = parseFloat(document.getElementById("inflation").value);
 
+  // Return if is there any Non Number value
   if (
     isNaN(currentAge) ||
     isNaN(targetAge) ||
@@ -23,6 +25,7 @@ function calculateAndShowResult() {
     return;
   }
 
+  // Return if targeted age is less then current age
   if (targetAge <= currentAge) {
     document.getElementById("result").textContent =
       "Target withdrawal age must be greater than current age.";
@@ -75,13 +78,13 @@ function calculateAndShowResult() {
   }
 
   const result = `If you retire at the age of ${targetAge} with your current retirement savings of $${currentSavings.toFixed(
-    2
+    2,
   )}, while contributing $${contribution.toFixed(
-    2
+    2,
   )} every period with an inflation rate of ${(inflationRate * 100).toFixed(
-    2
+    2,
   )}%, you will have an estimated retirement savings of $${futureValue.toFixed(
-    2
+    2,
   )}. After retirement, considering your spending, your savings will last until approximately age ${
     ageLabels[ageLabels.length - 1]
   }.`;
@@ -91,6 +94,9 @@ function calculateAndShowResult() {
   if (chart) {
     chart.destroy();
   }
+
+  // Calculate the length of SavingsData for offset in leftSavingsData
+  const nullOffsets = Array(savingsData.length - 1).fill(null);
 
   const ctx = document.getElementById("myChart").getContext("2d");
   chart = new Chart(ctx, {
@@ -109,7 +115,7 @@ function calculateAndShowResult() {
         },
         {
           label: "Left Savings",
-          data: leftSavingsData,
+          data: [...nullOffsets, ...leftSavingsData],
           borderColor: "rgba(255, 99, 132, 1)",
           fill: false,
           tension: 0.1,
@@ -213,7 +219,7 @@ function addSpendingBox() {
 function createSpendingBox(spendingTitle, spendingIcon, isCustom) {
   const spendingAmount = document.getElementById("spendingAmount").value;
   const spendingFrequency = document.querySelector(
-    'input[name="spendingFrequency"]:checked'
+    'input[name="spendingFrequency"]:checked',
   ).value;
 
   if (!spendingTitle || isNaN(spendingAmount) || spendingAmount <= 0) {
@@ -337,7 +343,7 @@ function createSpendingBox(spendingTitle, spendingIcon, isCustom) {
       editFrequencyYearly,
       title,
       amount,
-      isCustom
+      isCustom,
     );
   };
 
@@ -381,7 +387,7 @@ function toggleEditMode(box, isEditing) {
   const editAmountInput = box.querySelector('.edit-mode[type="number"]');
   const editIconInput = box.querySelector('.edit-mode[type="file"]');
   const frequencyContainer = box.querySelector(
-    ".edit-mode.flex.items-center.space-x-4"
+    ".edit-mode.flex.items-center.space-x-4",
   );
   const buttonContainer = box.querySelector(".button-container.edit-mode");
 
@@ -434,7 +440,7 @@ function saveEdits(
   editFrequencyYearly,
   title,
   amount,
-  isCustom
+  isCustom,
 ) {
   const newTitle = titleInput.value;
   const newAmount = amountInput.value;
@@ -488,7 +494,7 @@ function resetSpendingForm() {
 function removeDropdownOption(option) {
   const spendingTitleSelect = document.getElementById("spendingTitle");
   const optionToRemove = Array.from(spendingTitleSelect.options).find(
-    (opt) => opt.value === option
+    (opt) => opt.value === option,
   );
   if (optionToRemove) {
     spendingTitleSelect.removeChild(optionToRemove);
@@ -513,14 +519,14 @@ function restoreDropdownOption(option) {
 
   spendingTitleSelect.insertBefore(
     newOption,
-    spendingTitleSelect.querySelector('option[value="custom"]')
+    spendingTitleSelect.querySelector('option[value="custom"]'),
   );
 }
 
 function maintainCustomTitleOption() {
   const spendingTitleSelect = document.getElementById("spendingTitle");
   const customOption = spendingTitleSelect.querySelector(
-    'option[value="custom"]'
+    'option[value="custom"]',
   );
   if (customOption) {
     spendingTitleSelect.appendChild(customOption);
