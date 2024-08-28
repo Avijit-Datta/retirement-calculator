@@ -1,534 +1,471 @@
 let chart;
 
+document.getElementById('includePension').addEventListener('change', function () {
+    const pensionDetails = document.getElementById('pensionDetails');
+    if (this.checked) {
+        pensionDetails.classList.remove('hidden');
+    } else {
+        pensionDetails.classList.add('hidden');
+    }
+});
+
+document.getElementById('spendingTitle').addEventListener('change', function () {
+    const selectedOption = this.options[this.selectedIndex];
+    const spendingAmountInput = document.getElementById('spendingAmount');
+    const spendingFrequencyLabel = document.getElementById('spendingFrequencyLabel');
+    const spendingFrequencyContainer = document.getElementById('spendingFrequencyContainer');
+
+    if (selectedOption.value !== 'custom') {
+        const defaultAmount = selectedOption.getAttribute('data-default-amount');
+        spendingAmountInput.value = defaultAmount;
+
+        spendingFrequencyLabel.classList.add('hidden');
+        spendingFrequencyContainer.classList.add('hidden');
+    } else {
+        spendingAmountInput.value = '';
+        spendingFrequencyLabel.classList.remove('hidden');
+        spendingFrequencyContainer.classList.remove('hidden');
+    }
+});
+
 function calculateAndShowResult() {
-  // Get all values from input fields
-  const currentAge = parseFloat(document.getElementById("currentAge").value);
-  const targetAge = parseFloat(document.getElementById("targetAge").value);
-  const currentSavings = parseFloat(
-    document.getElementById("retirementSavings").value,
-  );
-  const contribution = parseFloat(
-    document.getElementById("contribution").value,
-  );
-  const frequency = parseFloat(document.getElementById("frequency").value);
-  const inflationRate = parseFloat(document.getElementById("inflation").value);
+    // Get all values from input fields
+    const currentAge = parseFloat(document.getElementById("currentAge").value);
+    const targetAge = parseFloat(document.getElementById("targetAge").value);
+    const currentSavings = parseFloat(
+        document.getElementById("retirementSavings").value,
+    );
+    const contribution = parseFloat(
+        document.getElementById("contribution").value,
+    );
+    const frequency = parseFloat(document.getElementById("frequency").value);
+    const inflationRate = parseFloat(document.getElementById("inflation").value);
 
-  // Return if is there any Non Number value
-  if (
-    isNaN(currentAge) ||
-    isNaN(targetAge) ||
-    isNaN(currentSavings) ||
-    isNaN(contribution)
-  ) {
-    document.getElementById("result").textContent =
-      "Please fill in all fields correctly.";
-    return;
-  }
+    let includePension = document.getElementById('includePension').checked;
+    let pensionAmount = includePension ? parseFloat(document.getElementById("pensionAmount").value) * 12 : 0;
+    let pensionAge = includePension ? parseFloat(document.getElementById("pensionAge").value) : Infinity;
 
-  // Return if targeted age is less then current age
-  if (targetAge <= currentAge) {
-    document.getElementById("result").textContent =
-      "Target withdrawal age must be greater than current age.";
-    return;
-  }
-
-  const yearsToRetirement = targetAge - currentAge;
-  let savingsData = [];
-  let leftSavingsData = [];
-  let ageLabels = [];
-  let futureValue = currentSavings;
-  let adjustedContribution = contribution;
-
-  // Calculate savings until retirement
-  for (let i = 0; i <= yearsToRetirement; i++) {
-    if (i > 0) {
-      adjustedContribution *= 1 + inflationRate;
+    // Return if is there any Non Number value
+    if (
+        isNaN(currentAge) ||
+        isNaN(targetAge) ||
+        isNaN(currentSavings) ||
+        isNaN(contribution)
+    ) {
+        document.getElementById("result").textContent =
+            "Please fill in all fields correctly.";
+        return;
     }
-    futureValue += adjustedContribution * frequency;
 
-    savingsData.push(futureValue.toFixed(2));
-    ageLabels.push(currentAge + i);
-  }
+    // Return if targeted age is less than current age
+    if (targetAge <= currentAge) {
+        document.getElementById("result").textContent =
+            "Target withdrawal age must be greater than current age.";
+        return;
+    }
 
-  // Aligning Left Savings data to start correctly from the targetAge
-  ageLabels.push(targetAge); // Ensure the target age is in the labels
+    const yearsToRetirement = targetAge - currentAge;
+    let savingsData = [];
+    let leftSavingsData = [];
+    let ageLabels = [];
+    let futureValue = currentSavings;
+    let adjustedContribution = contribution;
 
-  let remainingSavings = futureValue;
-  const spendingBoxes = document.querySelectorAll(".spending-box");
+    // Calculate savings until retirement
+    for (let i = 0; i <= yearsToRetirement; i++) {
+        if (i > 0) {
+            adjustedContribution *= 1 + inflationRate;
+        }
+        futureValue += adjustedContribution * frequency;
 
-  for (let i = targetAge; i <= 100; i++) {
-    let yearlySpending = 0;
+        savingsData.push(futureValue.toFixed(2));
+        ageLabels.push(currentAge + i);
+    }
 
-    spendingBoxes.forEach((box) => {
-      const spendingAmount = parseFloat(box.getAttribute("data-amount")) || 0;
-      const spendingFrequency = box.getAttribute("data-frequency") || "yearly";
+    // Aligning Left Savings data to start correctly from the targetAge
+    ageLabels.push(targetAge); // Ensure the target age is in the labels
 
-      const adjustedSpending =
-        spendingFrequency === "monthly" ? spendingAmount * 12 : spendingAmount;
-      yearlySpending += adjustedSpending;
+    let remainingSavings = futureValue;
+    const spendingBoxes = document.querySelectorAll(".spending-box");
+
+    for (let i = targetAge; i <= 100; i++) {
+        let yearlySpending = 0;
+
+        spendingBoxes.forEach((box) => {
+            const spendingAmount = parseFloat(box.getAttribute("data-amount")) || 0;
+            const spendingFrequency = box.getAttribute("data-frequency") || "yearly";
+
+            const adjustedSpending =
+                spendingFrequency === "monthly" ? spendingAmount * 12 : spendingAmount;
+            yearlySpending += adjustedSpending;
+        });
+
+        if (i >= pensionAge) {
+            remainingSavings += pensionAmount; // Add government pension annually from eligibility age
+        }
+
+        remainingSavings -= yearlySpending;
+        if (remainingSavings < 0) remainingSavings = 0;
+
+        leftSavingsData.push(remainingSavings.toFixed(2));
+        if (i !== targetAge) {
+            ageLabels.push(i);
+        }
+    }
+
+    const result = `If you retire at the age of ${targetAge} with your current retirement savings of $${currentSavings.toFixed(
+        2,
+    )}, while contributing $${contribution.toFixed(
+        2,
+    )} every period with an inflation rate of ${(inflationRate * 100).toFixed(
+        2,
+    )}%, you will have an estimated retirement savings of $${futureValue.toFixed(
+        2,
+    )}. After retirement, considering your spending, your savings will last until approximately age ${
+        ageLabels[ageLabels.length - 1]
+    }.`;
+
+    document.getElementById("result").textContent = result;
+
+    if (chart) {
+        chart.destroy();
+    }
+
+    // Calculate the length of SavingsData for offset in leftSavingsData
+    const nullOffsets = Array(savingsData.length - 1).fill(null);
+
+    const ctx = document.getElementById("myChart").getContext("2d");
+    chart = new Chart(ctx, {
+        type: "line",
+        data: {
+            labels: ageLabels,
+            datasets: [
+                {
+                    label: "Retirement Savings",
+                    data: savingsData,
+                    borderColor: "rgba(75, 192, 192, 1)",
+                    fill: false,
+                    tension: 0.1,
+                    pointBackgroundColor: "rgba(75, 192, 192, 1)",
+                    pointBorderColor: "rgba(75, 192, 192, 1)",
+                },
+                {
+                    label: "Left Savings",
+                    data: [...nullOffsets, ...leftSavingsData],
+                    borderColor: "rgba(255, 99, 132, 1)",
+                    fill: false,
+                    tension: 0.1,
+                    pointBackgroundColor: "rgba(255, 99, 132, 1)",
+                    pointBorderColor: "rgba(255, 99, 132, 1)",
+                },
+            ],
+        },
+        options: {
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: "Age",
+                    },
+                    min: currentAge,
+                    max: 100,
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: "Amount ($)",
+                    },
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function (value) {
+                            return value / 1000 + "k";
+                        },
+                    },
+                },
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function (context) {
+                            const label = context.dataset.label || "";
+                            const index = context.dataIndex;
+                            const age = ageLabels[index];
+                            const value = Number(context.parsed.y).toFixed(2);
+
+                            if (label === "Retirement Savings") {
+                                return `Age: ${age} | Savings: $${value}`;
+                            } else if (label === "Left Savings") {
+                                const spendingBoxes = document.querySelectorAll(".spending-box");
+                                let yearlySpending = 0;
+
+                                spendingBoxes.forEach((box) => {
+                                    const spendingAmount = parseFloat(box.getAttribute("data-amount")) || 0;
+                                    const spendingFrequency = box.getAttribute("data-frequency") || "yearly";
+
+                                    const adjustedSpending =
+                                        spendingFrequency === "monthly" ? spendingAmount * 12 : spendingAmount;
+                                    yearlySpending += adjustedSpending;
+                                });
+
+                                const spending = yearlySpending.toFixed(2);
+                                return `Age: ${age} | Yearly Spending: $${spending} | Savings Left: $${value}`;
+                            }
+                            return `${label}: $${value}`;
+                        },
+                    },
+                },
+            },
+        },
     });
-
-    remainingSavings -= yearlySpending;
-    if (remainingSavings < 0) remainingSavings = 0;
-
-    leftSavingsData.push(remainingSavings.toFixed(2));
-    if (i !== targetAge) {
-      ageLabels.push(i);
-    }
-  }
-
-  const result = `If you retire at the age of ${targetAge} with your current retirement savings of $${currentSavings.toFixed(
-    2,
-  )}, while contributing $${contribution.toFixed(
-    2,
-  )} every period with an inflation rate of ${(inflationRate * 100).toFixed(
-    2,
-  )}%, you will have an estimated retirement savings of $${futureValue.toFixed(
-    2,
-  )}. After retirement, considering your spending, your savings will last until approximately age ${
-    ageLabels[ageLabels.length - 1]
-  }.`;
-
-  document.getElementById("result").textContent = result;
-
-  if (chart) {
-    chart.destroy();
-  }
-
-  // Calculate the length of SavingsData for offset in leftSavingsData
-  const nullOffsets = Array(savingsData.length - 1).fill(null);
-
-  const ctx = document.getElementById("myChart").getContext("2d");
-  chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: ageLabels,
-      datasets: [
-        {
-          label: "Retirement Savings",
-          data: savingsData,
-          borderColor: "rgba(75, 192, 192, 1)",
-          fill: false,
-          tension: 0.1,
-          pointBackgroundColor: "rgba(75, 192, 192, 1)",
-          pointBorderColor: "rgba(75, 192, 192, 1)",
-        },
-        {
-          label: "Left Savings",
-          data: [...nullOffsets, ...leftSavingsData],
-          borderColor: "rgba(255, 99, 132, 1)",
-          fill: false,
-          tension: 0.1,
-          pointBackgroundColor: "rgba(255, 99, 132, 1)",
-          pointBorderColor: "rgba(255, 99, 132, 1)",
-        },
-      ],
-    },
-    options: {
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: "Age",
-          },
-          min: currentAge,
-          max: 100,
-        },
-        y: {
-          title: {
-            display: true,
-            text: "Amount ($)",
-          },
-          beginAtZero: true,
-          ticks: {
-            callback: function (value) {
-              return value / 1000 + "k";
-            },
-          },
-        },
-      },
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: function (context) {
-              const label = context.dataset.label || "";
-              const index = context.dataIndex;
-              const age = ageLabels[index];
-              const value = Number(context.parsed.y).toFixed(2);
-
-              if (label === "Retirement Savings") {
-                return `Age: ${age} | Savings: $${value}`;
-              } else if (label === "Left Savings") {
-                let spending = (
-                  leftSavingsData[index - 1] - leftSavingsData[index]
-                ).toFixed(2);
-                spending = spending < 0 ? 0 : spending;
-                return `Age: ${age} | Yearly Spending: $${spending} | Savings Left: $${value}`;
-              }
-              return `${label}: $${value}`;
-            },
-          },
-        },
-      },
-    },
-  });
 }
 
 function toggleCustomTitleInput() {
-  const spendingTitleSelect = document.getElementById("spendingTitle");
-  const spendingTitleCustom = document.getElementById("spendingTitleCustom");
-  const spendingIcon = document.getElementById("spendingIcon");
-  const spendingIconLabel = document.getElementById("spendingIconLabel");
+    const spendingTitleSelect = document.getElementById("spendingTitle");
+    const spendingTitleCustom = document.getElementById("spendingTitleCustom");
+    const spendingIcon = document.getElementById("spendingIcon");
+    const spendingIconLabel = document.getElementById("spendingIconLabel");
 
-  if (spendingTitleSelect.value === "custom") {
-    spendingTitleCustom.classList.remove("hidden");
-    spendingIcon.classList.remove("hidden");
-    spendingIconLabel.classList.remove("hidden");
-  } else {
-    spendingTitleCustom.classList.add("hidden");
-    spendingIcon.classList.add("hidden");
-    spendingIconLabel.classList.add("hidden");
-  }
+    if (spendingTitleSelect.value === "custom") {
+        spendingTitleCustom.classList.remove("hidden");
+        spendingIcon.classList.remove("hidden");
+        spendingIconLabel.classList.remove("hidden");
+    } else {
+        spendingTitleCustom.classList.add("hidden");
+        spendingIcon.classList.add("hidden");
+        spendingIconLabel.classList.add("hidden");
+    }
 }
 
 function addSpendingBox() {
-  const spendingTitleSelect = document.getElementById("spendingTitle");
-  const spendingTitleCustom = document
-    .getElementById("spendingTitleCustom")
-    .value.trim();
-  let spendingTitle = spendingTitleSelect.value;
-  let spendingIcon =
-    spendingTitleSelect.selectedOptions[0].getAttribute("data-icon");
+    const spendingTitleSelect = document.getElementById("spendingTitle");
+    const spendingTitleCustom = document
+        .getElementById("spendingTitleCustom")
+        .value.trim();
+    let spendingTitle = spendingTitleSelect.value;
+    let spendingIcon =
+        spendingTitleSelect.selectedOptions[0].getAttribute("data-icon");
 
-  const customIconFile = document.getElementById("spendingIcon").files[0];
-  if (spendingTitle === "custom" && customIconFile) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      spendingIcon = `<img src="${e.target.result}" alt="icon" class="w-8 h-8 dropdown-icon">`;
-      createSpendingBox(spendingTitleCustom, spendingIcon, true);
-    };
-    reader.readAsDataURL(customIconFile);
-  } else if (spendingTitle === "custom") {
-    spendingIcon = "💰"; // Default icon for custom titles without an uploaded icon
-    createSpendingBox(spendingTitleCustom, spendingIcon, true);
-  } else {
-    createSpendingBox(spendingTitle, spendingIcon, false);
-  }
+    const customIconFile = document.getElementById("spendingIcon").files[0];
+    if (spendingTitle === "custom" && customIconFile) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            spendingIcon = `<img src="${e.target.result}" alt="icon" class="w-8 h-8 dropdown-icon">`;
+            createSpendingBox(spendingTitleCustom, spendingIcon, true);
+        };
+        reader.readAsDataURL(customIconFile);
+    } else if (spendingTitle === "custom") {
+        spendingIcon = "💰"; // Default icon for custom titles without an uploaded icon
+        createSpendingBox(spendingTitleCustom, spendingIcon, true);
+    } else {
+        createSpendingBox(spendingTitle, spendingIcon, false);
+    }
 }
 
 function createSpendingBox(spendingTitle, spendingIcon, isCustom) {
-  const spendingAmount = document.getElementById("spendingAmount").value;
-  const spendingFrequency = document.querySelector(
-    'input[name="spendingFrequency"]:checked',
-  ).value;
+    const spendingAmount = document.getElementById("spendingAmount").value;
+    const spendingFrequency = document.querySelector(
+        'input[name="spendingFrequency"]:checked',
+    ).value;
 
-  if (!spendingTitle || isNaN(spendingAmount) || spendingAmount <= 0) {
-    alert("Please provide valid spending details.");
-    return;
-  }
-
-  const spendingBoxContainer = document.getElementById("spendingBoxContainer");
-
-  // Ensure only one box is in edit mode at a time
-  const existingEditBox = document.querySelector(".spending-box.editing");
-  if (existingEditBox) {
-    existingEditBox.classList.add("editing-warning");
-    return;
-  }
-
-  const spendingBox = document.createElement("div");
-  spendingBox.className =
-    "spending-box p-4 rounded-lg shadow-lg flex flex-col items-center justify-center relative";
-  spendingBox.setAttribute("data-amount", spendingAmount);
-  spendingBox.setAttribute("data-frequency", spendingFrequency);
-  spendingBox.setAttribute("data-title", spendingTitle);
-
-  const iconElement = document.createElement("div");
-  iconElement.className = "icon text-2xl mb-2";
-  iconElement.innerHTML = spendingIcon;
-
-  const title = document.createElement("div");
-  title.className = "view-mode text-lg font-semibold";
-  title.textContent = spendingTitle;
-
-  const amount = document.createElement("div");
-  amount.className = "view-mode text-lg font-medium";
-  amount.textContent = `$${spendingAmount} / ${spendingFrequency}`;
-
-  const editButton = document.createElement("button");
-  editButton.textContent = "✎";
-  editButton.className = "edit-spending text-green-500 absolute top-2 right-10";
-  editButton.onclick = function () {
-    toggleEditMode(spendingBox, true);
-  };
-
-  const removeButton = document.createElement("button");
-  removeButton.textContent = "☓";
-  removeButton.className =
-    "remove-spending text-red-500 absolute top-2 right-2";
-  removeButton.onclick = function () {
-    spendingBox.remove();
-    calculateAndShowResult();
-    // Only restore dropdown option for prelisted items
-    if (!isCustom) {
-      restoreDropdownOption(spendingTitle); // Ensure item is added back to dropdown on removal
-    }
-  };
-
-  const editTitleInput = document.createElement("input");
-  editTitleInput.type = "text";
-  editTitleInput.value = spendingTitle;
-  editTitleInput.className =
-    "edit-mode w-full p-2 border rounded-lg mb-2 hidden";
-
-  const editAmountInput = document.createElement("input");
-  editAmountInput.type = "number";
-  editAmountInput.value = spendingAmount;
-  editAmountInput.className =
-    "edit-mode w-full p-2 border rounded-lg mb-2 hidden";
-
-  const editIconInput = document.createElement("input");
-  editIconInput.type = "file";
-  editIconInput.accept = "image/*";
-  editIconInput.className =
-    "edit-mode w-full p-2 border rounded-lg mb-2 hidden";
-
-  const frequencyContainer = document.createElement("div");
-  frequencyContainer.className =
-    "flex items-center space-x-4 edit-mode hidden mb-2";
-
-  const editFrequencyMonthly = document.createElement("input");
-  editFrequencyMonthly.type = "radio";
-  editFrequencyMonthly.name = `editFrequency-${spendingTitle}`;
-  editFrequencyMonthly.value = "monthly";
-  editFrequencyMonthly.className =
-    "h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500";
-  editFrequencyMonthly.checked = spendingFrequency === "monthly";
-
-  const editFrequencyYearly = document.createElement("input");
-  editFrequencyYearly.type = "radio";
-  editFrequencyYearly.name = `editFrequency-${spendingTitle}`;
-  editFrequencyYearly.value = "yearly";
-  editFrequencyYearly.className =
-    "h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500";
-  editFrequencyYearly.checked = spendingFrequency === "yearly";
-
-  const frequencyLabelMonthly = document.createElement("label");
-  frequencyLabelMonthly.className = "flex items-center";
-  frequencyLabelMonthly.appendChild(editFrequencyMonthly);
-  frequencyLabelMonthly.appendChild(document.createTextNode(" Monthly"));
-
-  const frequencyLabelYearly = document.createElement("label");
-  frequencyLabelYearly.className = "flex items-center";
-  frequencyLabelYearly.appendChild(editFrequencyYearly);
-  frequencyLabelYearly.appendChild(document.createTextNode(" Yearly"));
-
-  frequencyContainer.appendChild(frequencyLabelMonthly);
-  frequencyContainer.appendChild(frequencyLabelYearly);
-
-  const buttonContainer = document.createElement("div");
-  buttonContainer.className =
-    "button-container edit-mode flex justify-between w-full mt-2 hidden";
-
-  const saveButton = document.createElement("button");
-  saveButton.textContent = "✓";
-  saveButton.className = "save-button text-green-500";
-  saveButton.onclick = function () {
-    saveEdits(
-      spendingBox,
-      editTitleInput,
-      editAmountInput,
-      editIconInput,
-      editFrequencyMonthly,
-      editFrequencyYearly,
-      title,
-      amount,
-      isCustom,
-    );
-  };
-
-  const cancelButton = document.createElement("button");
-  cancelButton.textContent = "☓";
-  cancelButton.className = "cancel-button text-red-500";
-  cancelButton.onclick = function () {
-    toggleEditMode(spendingBox, false);
-    spendingBox.classList.remove("editing-warning"); // Remove the red border warning
-  };
-
-  buttonContainer.appendChild(saveButton);
-  buttonContainer.appendChild(cancelButton);
-
-  spendingBox.appendChild(iconElement);
-  spendingBox.appendChild(title);
-  spendingBox.appendChild(amount);
-  spendingBox.appendChild(editTitleInput);
-  spendingBox.appendChild(editAmountInput);
-  spendingBox.appendChild(editIconInput);
-  spendingBox.appendChild(frequencyContainer);
-  spendingBox.appendChild(buttonContainer);
-  spendingBox.appendChild(editButton);
-  spendingBox.appendChild(removeButton);
-
-  spendingBoxContainer.appendChild(spendingBox);
-
-  if (!isCustom) {
-    removeDropdownOption(spendingTitle);
-  }
-
-  calculateAndShowResult();
-
-  resetSpendingForm();
-}
-
-function toggleEditMode(box, isEditing) {
-  const title = box.querySelector(".view-mode");
-  const amount = box.querySelector(".view-mode:nth-child(2)");
-  const editTitleInput = box.querySelector('.edit-mode[type="text"]');
-  const editAmountInput = box.querySelector('.edit-mode[type="number"]');
-  const editIconInput = box.querySelector('.edit-mode[type="file"]');
-  const frequencyContainer = box.querySelector(
-    ".edit-mode.flex.items-center.space-x-4",
-  );
-  const buttonContainer = box.querySelector(".button-container.edit-mode");
-
-  if (isEditing) {
-    // Check if another box is already in edit mode
-    const existingEditBox = document.querySelector(".spending-box.editing");
-    if (existingEditBox && existingEditBox !== box) {
-      existingEditBox.classList.add("editing-warning");
-      return;
+    if (!spendingTitle || isNaN(spendingAmount) || spendingAmount <= 0) {
+        alert("Please provide valid spending details.");
+        return;
     }
 
-    box.classList.add("editing");
-    title.classList.add("hidden");
-    amount.classList.add("hidden");
-    editTitleInput.classList.remove("hidden");
-    editAmountInput.classList.remove("hidden");
+    const spendingBoxContainer = document.getElementById("spendingBoxContainer");
 
-    // Show or hide the icon input based on whether the item is prelisted or custom
-    const prelistedItems = [
-      "Rent/Mortgage",
-      "Utilities",
-      "Groceries",
-      "Healthcare",
-      "Travel",
-    ];
-    if (!prelistedItems.includes(box.getAttribute("data-title"))) {
-      editIconInput.classList.remove("hidden");
-    }
+    const spendingBox = document.createElement("div");
+    spendingBox.className =
+        "spending-box p-4 rounded-lg shadow-lg flex flex-col items-center justify-center relative";
+    spendingBox.setAttribute("data-amount", spendingAmount);
+    spendingBox.setAttribute("data-frequency", spendingFrequency);
+    spendingBox.setAttribute("data-title", spendingTitle);
 
-    frequencyContainer.classList.remove("hidden");
-    buttonContainer.classList.remove("hidden");
-  } else {
-    box.classList.remove("editing");
-    title.classList.remove("hidden");
-    amount.classList.remove("hidden");
-    editTitleInput.classList.add("hidden");
-    editAmountInput.classList.add("hidden");
-    editIconInput.classList.add("hidden");
-    frequencyContainer.classList.add("hidden");
-    buttonContainer.classList.add("hidden");
-  }
-}
+    const iconElement = document.createElement("div");
+    iconElement.className = "icon text-2xl mb-2";
+    iconElement.innerHTML = spendingIcon;
 
-function saveEdits(
-  box,
-  titleInput,
-  amountInput,
-  editIconInput,
-  editFrequencyMonthly,
-  editFrequencyYearly,
-  title,
-  amount,
-  isCustom,
-) {
-  const newTitle = titleInput.value;
-  const newAmount = amountInput.value;
-  const newFrequency = editFrequencyMonthly.checked ? "monthly" : "yearly";
-  let iconHTML = box.querySelector(".icon").innerHTML;
-
-  if (editIconInput && editIconInput.files.length > 0) {
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      iconHTML = `<img src="${e.target.result}" alt="icon" class="w-8 h-8 dropdown-icon">`;
-      finalizeEdit();
+    const title = document.createElement("div");
+    title.className = "view-mode text-lg font-semibold editable";
+    title.textContent = spendingTitle;
+    title.onclick = function () {
+        makeEditable(title, spendingBox, "data-title", "editable-input");
     };
-    reader.readAsDataURL(editIconInput.files[0]);
-  } else {
-    finalizeEdit();
-  }
 
-  function finalizeEdit() {
-    if (!newTitle || isNaN(newAmount) || newAmount <= 0) {
-      alert("Please provide valid spending details.");
-      return;
+    const amountFrequency = document.createElement("div");
+    amountFrequency.className = "view-mode amount-frequency text-lg font-medium editable";
+    amountFrequency.innerHTML = `<span class="editable-input-amount">$${spendingAmount}</span>/<span class="editable-input-frequency">${spendingFrequency}</span>`;
+    amountFrequency.querySelector('.editable-input-amount').onclick = function () {
+        makeEditable(this, spendingBox, "data-amount", "editable-input editable-input-amount", true);
+    };
+    amountFrequency.querySelector('.editable-input-frequency').onclick = function () {
+        makeFrequencyEditable(this, spendingBox, "data-frequency");
+    };
+
+    const removeButton = document.createElement("button");
+    removeButton.textContent = "☓";
+    removeButton.className = "remove-spending absolute top-2 right-2";
+    removeButton.onclick = function () {
+        spendingBox.remove();
+        calculateAndShowResult();
+        if (!isCustom) {
+            restoreDropdownOption(spendingTitle);
+        }
+    };
+
+    spendingBox.appendChild(iconElement);
+    spendingBox.appendChild(title);
+    spendingBox.appendChild(amountFrequency);
+    spendingBox.appendChild(removeButton);
+
+    spendingBoxContainer.appendChild(spendingBox);
+
+    if (!isCustom) {
+        removeDropdownOption(spendingTitle);
     }
 
-    title.textContent = newTitle;
-    amount.textContent = `$${newAmount} / ${newFrequency}`;
-
-    box.setAttribute("data-amount", newAmount);
-    box.setAttribute("data-frequency", newFrequency);
-    box.querySelector(".icon").innerHTML = iconHTML;
-
-    toggleEditMode(box, false);
-    box.classList.remove("editing-warning"); // Remove the red border warning
     calculateAndShowResult();
-  }
+    resetSpendingForm();
+}
+
+function makeEditable(element, spendingBox, dataAttribute, inputClass, isAmount = false) {
+    const originalText = element.textContent;
+    const input = document.createElement("input");
+
+    input.value = isAmount ? parseFloat(spendingBox.getAttribute(dataAttribute)) : originalText;
+    input.className = inputClass;
+    input.style.textAlign = "center";
+    input.addEventListener("blur", function () {
+        if (input.value.trim() === "") {
+            element.textContent = originalText;
+        } else {
+            element.textContent = isAmount ? `$${input.value.trim()}` : input.value.trim();
+            spendingBox.setAttribute(dataAttribute, input.value.trim());
+        }
+        element.style.display = "";
+        input.remove();
+        element.classList.remove("editing");
+        calculateAndShowResult();
+    });
+
+    input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            input.blur();
+        }
+    });
+
+    element.classList.add("editing");
+    element.style.display = "none";
+    element.parentNode.insertBefore(input, element);
+    input.focus();
+}
+
+function makeFrequencyEditable(element, spendingBox, dataAttribute) {
+    const originalText = element.textContent;
+    const select = document.createElement("select");
+
+    const monthlyOption = document.createElement("option");
+    monthlyOption.value = "monthly";
+    monthlyOption.text = "Monthly";
+    const yearlyOption = document.createElement("option");
+    yearlyOption.value = "yearly";
+    yearlyOption.text = "Yearly";
+
+    select.appendChild(monthlyOption);
+    select.appendChild(yearlyOption);
+
+    select.value = spendingBox.getAttribute(dataAttribute);
+    select.className = "editable-select";
+    select.style.textAlign = "left";
+
+    select.addEventListener("blur", function () {
+        element.textContent = select.options[select.selectedIndex].text;
+        spendingBox.setAttribute(dataAttribute, select.value);
+        element.style.display = "";
+        select.remove();
+        element.classList.remove("editing");
+        calculateAndShowResult();
+    });
+
+    select.addEventListener("change", function () {
+        select.blur();
+    });
+
+    element.classList.add("editing");
+    element.style.display = "none";
+    element.parentNode.insertBefore(select, element);
+    select.focus();
 }
 
 function resetSpendingForm() {
-  const spendingTitleSelect = document.getElementById("spendingTitle");
-  spendingTitleSelect.value = "";
-  const spendingTitleCustom = document.getElementById("spendingTitleCustom");
-  spendingTitleCustom.value = "";
-  spendingTitleCustom.classList.add("hidden");
-  const spendingIcon = document.getElementById("spendingIcon");
-  spendingIcon.value = "";
-  spendingIcon.classList.add("hidden");
-  document.getElementById("spendingAmount").value = "";
-  document.getElementById("monthly").checked = false;
-  document.getElementById("yearly").checked = true;
+    const spendingTitleSelect = document.getElementById("spendingTitle");
+    spendingTitleSelect.value = "";
+    const spendingTitleCustom = document.getElementById("spendingTitleCustom");
+    spendingTitleCustom.value = "";
+    spendingTitleCustom.classList.add("hidden");
+    const spendingIcon = document.getElementById("spendingIcon");
+    spendingIcon.value = "";
+    spendingIcon.classList.add("hidden");
+    document.getElementById("spendingAmount").value = "";
+    document.getElementById("monthly").checked = false;
+    document.getElementById("yearly").checked = true;
 }
 
 function removeDropdownOption(option) {
-  const spendingTitleSelect = document.getElementById("spendingTitle");
-  const optionToRemove = Array.from(spendingTitleSelect.options).find(
-    (opt) => opt.value === option,
-  );
-  if (optionToRemove) {
-    spendingTitleSelect.removeChild(optionToRemove);
-  }
-  maintainCustomTitleOption();
+    const spendingTitleSelect = document.getElementById("spendingTitle");
+    const optionToRemove = Array.from(spendingTitleSelect.options).find(
+        (opt) => opt.value === option,
+    );
+    if (optionToRemove) {
+        spendingTitleSelect.removeChild(optionToRemove);
+    }
+    maintainCustomTitleOption();
 }
 
 function restoreDropdownOption(option) {
-  const spendingTitleSelect = document.getElementById("spendingTitle");
-  const icon = spendingTitleSelect
-    .querySelector(`option[value="${option}"]`)
-    ?.getAttribute("data-icon");
-  const newOption = document.createElement("option");
-  newOption.value = option;
-  newOption.textContent = option;
+    const spendingTitleSelect = document.getElementById("spendingTitle");
 
-  if (icon) {
-    newOption.setAttribute("data-icon", icon);
-    newOption.style.backgroundImage = `url('${icon}')`;
-    newOption.textContent = `${icon} ${option}`;
-  }
+    // Recreate the option with icon and default amount
+    const newOption = document.createElement("option");
+    newOption.value = option;
+    newOption.setAttribute("data-icon", getIconForOption(option));
+    newOption.setAttribute("data-default-amount", getDefaultAmountForOption(option));
+    newOption.innerHTML = `${getIconForOption(option)} ${option}`;
 
-  spendingTitleSelect.insertBefore(
-    newOption,
-    spendingTitleSelect.querySelector('option[value="custom"]'),
-  );
+    spendingTitleSelect.insertBefore(
+        newOption,
+        spendingTitleSelect.querySelector('option[value="custom"]'),
+    );
+}
+
+function getIconForOption(option) {
+    switch (option) {
+        case 'Rent/Mortgage': return '🏠';
+        case 'Utilities': return '💡';
+        case 'Groceries': return '🛒';
+        case 'Healthcare': return '💊';
+        case 'Travel': return '✈️';
+        default: return '';
+    }
+}
+
+function getDefaultAmountForOption(option) {
+    switch (option) {
+        case 'Rent/Mortgage': return '2500';
+        case 'Utilities': return '2500';
+        case 'Groceries': return '1500';
+        case 'Healthcare': return '2500';
+        case 'Travel': return '1000';
+        default: return '';
+    }
 }
 
 function maintainCustomTitleOption() {
-  const spendingTitleSelect = document.getElementById("spendingTitle");
-  const customOption = spendingTitleSelect.querySelector(
-    'option[value="custom"]',
-  );
-  if (customOption) {
-    spendingTitleSelect.appendChild(customOption);
-  }
+    const spendingTitleSelect = document.getElementById("spendingTitle");
+    const customOption = spendingTitleSelect.querySelector(
+        'option[value="custom"]',
+    );
+    if (customOption) {
+        spendingTitleSelect.appendChild(customOption);
+    }
 }

@@ -1,3 +1,81 @@
+/* Button Styling */
+.button-primary {
+  background-color: #51C28A;
+  color: #ffffff;
+  border-radius: 35px;
+  padding: 18px 23px;
+  box-shadow: 0px 4px 12px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.button-primary:hover {
+  background-color: #375D82;
+  box-shadow: 0px 15px 16px 0px rgba(0, 0, 0, 0.3);
+}
+
+/* Spending Box Styling */
+.spending-box {
+  background-color: #51C28A;
+  box-shadow: 0px 4px 12px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+  width: 100%;
+  max-width: 300px;
+}
+
+.spending-box:hover {
+  box-shadow: 0px 15px 16px 0px rgba(0, 0, 0, 0.3);
+}
+
+.spending-box .icon {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.spending-box .view-mode {
+  font-size: 22px;
+  padding: 10px 0;
+  color: white;
+  position: relative;
+  text-align: center;
+}
+
+.spending-box .amount-frequency {
+  font-size: 18px;
+  color: #374151;
+  position: relative;
+  text-align: center;
+}
+
+.spending-box .edit-spending,
+.spending-box .remove-spending {
+  background-color: transparent;
+  color: white;
+  padding: 3px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.spending-box .edit-spending:hover,
+.spending-box .remove-spending:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Hidden by default */
+.hidden {
+  display: none;
+}
+
+.notice {
+  font-size: 0.875rem;
+  color: #ff0000;
+  margin-top: -10px;
+  margin-bottom: 10px;
+}
+
 /* Style for dropdown items */
 #spendingTitle option {
   padding-left: 22px;
@@ -5,6 +83,7 @@
   background-position: left center;
   background-size: 20px 20px;
   font-size: 16px;
+  color: black;
 }
 
 /* Red border for editing warning */
@@ -18,25 +97,48 @@
   height: 22px;
 }
 
-/* Modern design for the spending box */
-.spending-box {
-  background: linear-gradient(145deg, #f0f0f0, #cacaca);
-  box-shadow:
-    6px 6px 12px #d1d1d1,
-    -6px -6px 12px #ffffff;
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+/* Editable elements styles */
+.editable {
+  cursor: pointer;
+  display: inline-block;
+  width: auto;
 }
 
-.spending-box:hover {
-  transform: translateY(-5px);
-  box-shadow:
-    10px 10px 20px #d1d1d1,
-    -10px -10px 20px #ffffff;
+.editing {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
 }
 
-/* Larger icons in the spending box */
-.spending-box .icon {
-  font-size: 2.5rem;
+.editable-input {
+  width: auto;
+  border: none;
+  background-color: transparent;
+  color: white;
+  font-size: 18px;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  text-align: center;
+}
+
+.editable-input-amount {
+  color: #374151;
+  text-align: right;
+}
+
+.editable-input-frequency {
+  text-align: left;
+}
+
+.editable-select {
+  width: auto;
+  background-color: transparent;
+  color: black;
+  font-size: 18px;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  border: none;
+  text-align: left;
 }
