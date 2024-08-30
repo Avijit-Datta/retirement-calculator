@@ -9,18 +9,32 @@
 }
 
 .button-primary:hover {
+  background-color: #366182;
+  box-shadow: 0px 15px 16px 0px rgba(0, 0, 0, 0.3);
+}
+
+.button-secondary {
   background-color: #375D82;
+  color: #ffffff;
+  border-radius: 35px;
+  padding: 18px 23px;
+  box-shadow: 0px 4px 12px 2px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.button-secondary:hover {
+  background-color: #366182;
   box-shadow: 0px 15px 16px 0px rgba(0, 0, 0, 0.3);
 }
 
 /* Spending Box Styling */
 .spending-box {
-  background-color: #51C28A;
+  background-color: #EEF3F9;
   box-shadow: 0px 4px 12px 2px rgba(0, 0, 0, 0.2);
   transition: all 0.3s ease;
   padding: 15px;
   border-radius: 10px;
-  color: white;
+  color: #375D82;
   width: 100%;
   max-width: 300px;
 }
@@ -37,7 +51,7 @@
 .spending-box .view-mode {
   font-size: 22px;
   padding: 10px 0;
-  color: white;
+  color: #375D82;
   position: relative;
   text-align: center;
 }
@@ -52,7 +66,7 @@
 .spending-box .edit-spending,
 .spending-box .remove-spending {
   background-color: transparent;
-  color: white;
+  color: #375D82;
   padding: 3px;
   border: none;
   cursor: pointer;
@@ -114,7 +128,7 @@
   width: auto;
   border: none;
   background-color: transparent;
-  color: white;
+  color: #375D82;
   font-size: 18px;
   padding: 0;
   margin: 0;
@@ -141,4 +155,36 @@
   outline: none;
   border: none;
   text-align: left;
+}
+
+/* Responsive container for spending boxes */
+.spending-box-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1024px) {
+  .spending-box-container {
+      grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .spending-box-container {
+      grid-template-columns: 1fr;
+  }
+
+  .sticky {
+      position: static;
+  }
+}
+
+/* Styling for the information text */
+.info-text {
+  font-size: 1rem;
+  color: #375D82;
+  font-weight: bold;
+  text-align: center;
+  margin-top: 20px;
 }
